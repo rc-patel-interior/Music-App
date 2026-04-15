@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANNIE MUSIC</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { max-width: 700px; width: 90%; text-align: center; padding: 3rem 2rem; }
+    .logo {
+      width: 120px; height: 120px;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      border-radius: 28px;
+      margin: 0 auto 2rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 8px 32px rgba(233, 30, 99, 0.4);
+    }
+    h1 {
+      font-size: 2.8rem; font-weight: 800; letter-spacing: 3px;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 1rem;
+    }
+    .tagline { font-size: 1.1rem; color: #aaa; margin-bottom: 2.5rem; line-height: 1.6; }
+    .download-section { margin-bottom: 2.5rem; }
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: #fff; font-weight: 700; padding: 1rem 2.5rem;
+      border-radius: 50px; font-size: 1.1rem; text-decoration: none;
+      box-shadow: 0 8px 32px rgba(233, 30, 99, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(233, 30, 99, 0.6); }
+    .apk-info { margin-top: 0.75rem; font-size: 0.82rem; color: #555; }
+    .features {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.2rem; margin-bottom: 2.5rem;
+    }
+    .feature-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 16px; padding: 1.5rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: #e91e63; }
+    .feature-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .feature-title { font-size: 0.9rem; font-weight: 600; color: #e0e0e0; margin-bottom: 0.4rem; }
+    .feature-desc { font-size: 0.8rem; color: #888; line-height: 1.4; }
+    .tech-section { margin-bottom: 2rem; }
+    .tech-section h2 { font-size: 0.85rem; color: #555; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+    .tag { background: #1a1a1a; border: 1px solid #333; padding: 0.35rem 0.85rem; border-radius: 50px; font-size: 0.8rem; color: #ccc; }
+    .android-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #1a1a1a; border: 1px solid #333; color: #aaa; padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.82rem; margin-top: 1.5rem; }
+    .install-note { margin-top: 1rem; padding: 0.85rem 1.2rem; background: #111; border-radius: 12px; border: 1px solid #222; font-size: 0.8rem; color: #555; line-height: 1.5; }
+    .install-note strong { color: #e91e63; }
+    .powered { margin-top: 1rem; padding: 0.6rem 1rem; background: #111; border-radius: 10px; border: 1px solid #1a1a1a; font-size: 0.78rem; color: #444; }
+    .powered span { color: #e91e63; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🎵</div>
+    <h1>ANNIE MUSIC</h1>
+    <p class="tagline">A modern Android music streaming app.<br>Search, discover, and stream music across trending categories.</p>
+
+    <div class="download-section">
+      <a href="/download/annie-music.apk" class="download-btn">⬇ Download APK</a>
+      <div class="apk-info">Debug build &nbsp;·&nbsp; Android 7.0+ (SDK 24+) &nbsp;·&nbsp; ~22 MB</div>
+      <div class="install-note">
+        <strong>Installation:</strong> Enable "Install from unknown sources" in your Android settings before installing.
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">Search</div>
+        <div class="feature-desc">Search millions of tracks instantly</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Trending</div>
+        <div class="feature-desc">Hindi, Punjabi, Bollywood &amp; more</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">▶️</div>
+        <div class="feature-title">Playback</div>
+        <div class="feature-desc">Background audio with ExoPlayer</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Dynamic UI</div>
+        <div class="feature-desc">Adaptive colors from album art</div>
+      </div>
+    </div>
+
+    <div class="tech-section">
+      <h2>Built With</h2>
+      <div class="tags">
+        <span class="tag">Kotlin</span>
+        <span class="tag">Jetpack Compose</span>
+        <span class="tag">Material 3</span>
+        <span class="tag">Hilt DI</span>
+        <span class="tag">Media3 ExoPlayer</span>
+        <span class="tag">Coil</span>
+        <span class="tag">MVVM</span>
+      </div>
+    </div>
+
+    <div class="android-badge">🤖 Android · Min SDK 24 · Target SDK 34</div>
+    <div class="powered">API powered by <span>yt-dlp</span> — live YouTube streaming</div>
+  </div>
+</body>
+</html>

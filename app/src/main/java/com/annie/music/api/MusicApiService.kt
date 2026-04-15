@@ -20,6 +20,6 @@ interface MusicApiService {
     suspend fun getDownloadUrl(@Query("v") videoId: String): StreamInfo
 
     companion object {
-        const val BASE_URL = "https://annie.qzz.io/"
+        const val BASE_URL = "https://d7e5ab2e-d069-43ca-bddc-1cb2d7817280-00-l75p44txq17x.pike.replit.dev/"
     }
 }

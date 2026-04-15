@@ -563,7 +563,7 @@ public final class DaggerAnnieMusicApp_HiltComponents_SingletonC {
     }
 
     @Override
-    public void injectAnnieMusicApp(AnnieMusicApp arg0) {
+    public void injectAnnieMusicApp(AnnieMusicApp annieMusicApp) {
     }
 
     @Override
