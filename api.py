@@ -35,24 +35,33 @@ _NOISE = re.compile(
     r'|\s+-\s+(?:full\s+)?(?:hd\s+)?song'
     r'|\s+-\s+lyrics?'
     r'|\s*#\S+'
-    r'|\s*ft\..*$',
+    r'|\s*\|\s*T-Series.*$'
+    r'|\s*\|\s*\w[\w\s]*Records.*$',
     re.IGNORECASE
 )
+_FT = re.compile(r'\s+(?:ft|feat)\.?\s+.+$', re.IGNORECASE)
 
 def clean_title(raw: str) -> str:
     t = raw.split('|')[0].strip()
     t = _NOISE.sub('', t)
+    t = _FT.sub('', t)
     return t.strip(' -|').strip()
 
 def parse_artist(raw: str) -> str:
     parts = raw.split('|')
     if len(parts) >= 2:
-        return parts[1].strip()
-    if ' - ' in parts[0]:
-        segments = parts[0].split(' - ', 1)
-        candidate = segments[1].split('(')[0].strip()
-        if len(candidate) < 60:
+        cand = parts[1].strip()
+        if len(cand) < 60:
+            return cand
+    p0 = parts[0]
+    if ' - ' in p0:
+        segs = p0.split(' - ', 1)
+        candidate = segs[0].strip()
+        if 3 < len(candidate) < 50 and not any(w in candidate.lower() for w in ['official', 'song', 'audio', 'video']):
             return candidate
+        candidate2 = segs[1].split('(')[0].strip()
+        if len(candidate2) < 60:
+            return candidate2
     return ''
 
 def make_thumb(vid_id: str, thumbs=None) -> str:
@@ -83,7 +92,7 @@ def entry_to_track(entry) -> dict | None:
         return None
     vid_id = entry.get('id', '') or ''
     if not is_valid_vid_id(vid_id):
-        url = entry.get('url', '') or ''
+        url = entry.get('url', '') or entry.get('webpage_url', '') or ''
         m = re.search(r'(?:v=|youtu\.be/)([A-Za-z0-9_-]{11})', url)
         vid_id = m.group(1) if m else ''
     if not is_valid_vid_id(vid_id):
@@ -100,16 +109,16 @@ def entry_to_track(entry) -> dict | None:
 
 # ─── yt-dlp helpers ───────────────────────────────────────────────────────────
 _FLAT_OPTS = {
-    'quiet': True,
-    'no_warnings': True,
+    'quiet':        True,
+    'no_warnings':  True,
     'extract_flat': True,
-    'skip_download': True,
+    'skip_download':True,
 }
 _STREAM_OPTS = {
-    'quiet': True,
-    'no_warnings': True,
-    'format': 'bestaudio[ext=m4a]/bestaudio/best',
-    'skip_download': True,
+    'quiet':        True,
+    'no_warnings':  True,
+    'format':       'bestaudio[ext=m4a]/bestaudio/best',
+    'skip_download':True,
 }
 
 def yt_search(query: str, count: int = 15) -> list:
@@ -119,7 +128,7 @@ def yt_search(query: str, count: int = 15) -> list:
         return cached
     try:
         with yt_dlp.YoutubeDL(_FLAT_OPTS) as ydl:
-            info = ydl.extract_info(f'ytsearch{count}:{query}', download=False)
+            info   = ydl.extract_info(f'ytsearch{count}:{query}', download=False)
             tracks = [t for t in (entry_to_track(e) for e in info.get('entries', [])) if t]
             cache_set(key, tracks, ttl=1800)
             return tracks
@@ -134,8 +143,8 @@ def yt_get_stream(vid_id: str) -> dict | None:
         return cached
     try:
         with yt_dlp.YoutubeDL(_STREAM_OPTS) as ydl:
-            info = ydl.extract_info(f'https://youtube.com/watch?v={vid_id}', download=False)
-            raw = info.get('title', '')
+            info   = ydl.extract_info(f'https://youtube.com/watch?v={vid_id}', download=False)
+            raw    = info.get('title', '')
             result = {
                 'title':     clean_title(raw),
                 'artist':    parse_artist(raw),
@@ -151,11 +160,11 @@ def yt_get_stream(vid_id: str) -> dict | None:
 
 # ─── Trending queries ─────────────────────────────────────────────────────────
 TRENDING_QUERIES = {
-    'hindi':         'new hindi songs 2024 audio',
-    'punjabi':       'new punjabi songs 2024 audio',
-    'bollywood':     'bollywood hits 2024 audio',
-    'romantic':      'romantic hindi songs audio 2024',
-    'international': 'top english pop songs 2024 audio',
+    'hindi':         'new hindi songs 2025 audio',
+    'punjabi':       'new punjabi songs 2025 audio',
+    'bollywood':     'bollywood hits 2025 audio',
+    'romantic':      'best romantic hindi songs 2025 audio',
+    'international': 'top english pop songs 2025 audio',
 }
 
 # ─── API routes ───────────────────────────────────────────────────────────────
@@ -164,7 +173,7 @@ def api_search():
     q = request.args.get('q', '').strip()
     if not q:
         return jsonify([])
-    tracks = yt_search(f'{q} audio', 15)
+    tracks = yt_search(f'{q} audio song', 15)
     return jsonify(tracks)
 
 @app.route('/api/trending')
@@ -204,17 +213,33 @@ def api_suggested():
     if cached is not None:
         return jsonify(cached)
     try:
-        opts = dict(_FLAT_OPTS)
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(f'https://youtube.com/watch?v={vid_id}', download=False)
-            raw_title = info.get('title', '')
-            entries = info.get('entries') or []
-            tracks = [t for t in (entry_to_track(e) for e in entries[:12]) if t]
-            if not tracks:
-                search_q = clean_title(raw_title) + ' audio'
-                tracks = yt_search(search_q, 10)
-            cache_set(f'sug:{vid_id}', tracks, ttl=3600)
-            return jsonify(tracks)
+        # Get the video title first to search for similar tracks
+        stream_cached = cache_get(f'st:{vid_id}')
+        if stream_cached and stream_cached.get('title'):
+            title  = stream_cached['title']
+            artist = stream_cached.get('artist', '')
+        else:
+            with yt_dlp.YoutubeDL({**_FLAT_OPTS, 'extract_flat': False}) as ydl:
+                info   = ydl.extract_info(f'https://youtube.com/watch?v={vid_id}', download=False)
+                title  = clean_title(info.get('title', ''))
+                artist = parse_artist(info.get('title', ''))
+
+        # Search for similar songs based on title and artist
+        if artist:
+            q1 = f'{artist} songs audio'
+        else:
+            q1 = f'{title} similar songs audio'
+
+        tracks = yt_search(q1, 12)
+        # Filter out the current track
+        tracks = [t for t in tracks if t.get('v') != vid_id][:10]
+
+        if not tracks:
+            tracks = yt_search(f'{title} audio', 10)
+            tracks = [t for t in tracks if t.get('v') != vid_id][:10]
+
+        cache_set(f'sug:{vid_id}', tracks, ttl=3600)
+        return jsonify(tracks)
     except Exception as e:
         print(f'[suggested] {vid_id}: {e}')
         return jsonify([])

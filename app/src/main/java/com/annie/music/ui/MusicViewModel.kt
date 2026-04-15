@@ -42,7 +42,7 @@ class MusicViewModel @Inject constructor(
     private val _currentTrack     = MutableStateFlow<Track?>(null)
     val currentTrack: StateFlow<Track?> = _currentTrack.asStateFlow()
 
-    private val _trackColor       = MutableStateFlow(Color(0xFFE91E63))
+    private val _trackColor       = MutableStateFlow(Color(0xFFE040FB))
     val trackColor: StateFlow<Color> = _trackColor.asStateFlow()
 
     private val _isPlaying        = MutableStateFlow(false)
@@ -54,33 +54,34 @@ class MusicViewModel @Inject constructor(
     private val _isBuffering      = MutableStateFlow(false)
     val isBuffering: StateFlow<Boolean> = _isBuffering.asStateFlow()
 
-    // Seek bar
     private val _currentPosition  = MutableStateFlow(0L)
     val currentPosition: StateFlow<Long> = _currentPosition.asStateFlow()
 
     private val _duration         = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    // Shuffle / Repeat (0=off, 1=one, 2=all)
     private val _shuffleEnabled   = MutableStateFlow(false)
     val shuffleEnabled: StateFlow<Boolean> = _shuffleEnabled.asStateFlow()
 
     private val _repeatMode       = MutableStateFlow(0)
     val repeatMode: StateFlow<Int> = _repeatMode.asStateFlow()
 
-    // Queue
     private val _queue            = MutableStateFlow<List<Track>>(emptyList())
     val queue: StateFlow<List<Track>> = _queue.asStateFlow()
 
     private var _queueIndex       = -1
 
-    // Favorites
-    private val _favorites        = MutableStateFlow<Set<String>>(emptySet())
-    val favorites: StateFlow<Set<String>> = _favorites.asStateFlow()
+    private val _favorites        = MutableStateFlow<Map<String, Track>>(emptyMap())
+    val favorites: StateFlow<Map<String, Track>> = _favorites.asStateFlow()
 
-    // Recent
     private val _recentTracks     = MutableStateFlow<List<Track>>(emptyList())
     val recentTracks: StateFlow<List<Track>> = _recentTracks.asStateFlow()
+
+    private val _suggestedTracks  = MutableStateFlow<List<Track>>(emptyList())
+    val suggestedTracks: StateFlow<List<Track>> = _suggestedTracks.asStateFlow()
+
+    private val _errorMessage     = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(playing: Boolean) {
@@ -108,7 +109,7 @@ class MusicViewModel @Inject constructor(
             while (true) {
                 _currentPosition.value = player.currentPosition.coerceAtLeast(0L)
                 val dur = player.duration
-                if (dur > 0) _duration.value = dur
+                if (dur > 0L && dur != Long.MIN_VALUE + 1) _duration.value = dur
                 delay(500L)
             }
         }
@@ -122,7 +123,9 @@ class MusicViewModel @Inject constructor(
     fun fetchTrending() {
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getTrending().onSuccess { _trendingTracks.value = it }
+            repository.getTrending()
+                .onSuccess { _trendingTracks.value = it }
+                .onFailure { _errorMessage.value = "Could not load trending. Check connection." }
             _isLoading.value = false
         }
     }
@@ -135,17 +138,27 @@ class MusicViewModel @Inject constructor(
         }
     }
 
+    fun fetchSuggested(videoId: String) {
+        viewModelScope.launch {
+            repository.getSuggested(videoId).onSuccess { tracks ->
+                _suggestedTracks.value = tracks.filter { it.id != videoId }
+            }
+        }
+    }
+
     fun playTrack(track: Track, queue: List<Track> = emptyList()) {
         if (track.id.isBlank()) return
         if (queue.isNotEmpty()) {
             _queue.value = queue
-        } else if (_queue.value.isEmpty()) {
+        } else if (_queue.value.none { it.id == track.id }) {
             _queue.value = listOf(track)
         }
         _queueIndex = _queue.value.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         addToRecent(track)
+        _suggestedTracks.value = emptyList()
         viewModelScope.launch {
             _currentTrack.value = track
+            _isBuffering.value  = true
             updateTrackColor(track.thumbnail)
             repository.getStream(track.id)
                 .onSuccess { streamInfo ->
@@ -153,8 +166,18 @@ class MusicViewModel @Inject constructor(
                     player.setMediaItem(mediaItem)
                     player.prepare()
                     player.play()
+                    fetchSuggested(track.id)
+                    if (!streamInfo.artist.isNullOrBlank() && track.artist.isNullOrBlank()) {
+                        _currentTrack.value = track.copy(
+                            title  = streamInfo.title.ifBlank { track.title },
+                            artist = streamInfo.artist
+                        )
+                    }
                 }
-                .onFailure { e -> android.util.Log.e("MusicVM", "Stream error: $e") }
+                .onFailure {
+                    _isBuffering.value = false
+                    _errorMessage.value = "Could not play this song. Try another."
+                }
         }
     }
 
@@ -171,29 +194,26 @@ class MusicViewModel @Inject constructor(
         val q = _queue.value
         if (q.isEmpty()) return
         val nextIdx = when {
-            _shuffleEnabled.value -> (q.indices - _queueIndex).randomOrNull() ?: return
+            _shuffleEnabled.value    -> (q.indices.toList() - _queueIndex).randomOrNull() ?: return
             _queueIndex < q.size - 1 -> _queueIndex + 1
             _repeatMode.value == 2   -> 0
-            else -> return
+            else                     -> return
         }
         _queueIndex = nextIdx
-        playTrack(q[nextIdx])
+        playTrack(q[nextIdx], q)
     }
 
     fun skipToPrevious() {
         val q = _queue.value
-        if (player.currentPosition > 3000L) {
-            player.seekTo(0L)
-            return
-        }
+        if (player.currentPosition > 3000L) { player.seekTo(0L); return }
         if (q.isEmpty()) return
         val prevIdx = when {
-            _queueIndex > 0        -> _queueIndex - 1
-            _repeatMode.value == 2 -> q.size - 1
-            else -> return
+            _queueIndex > 0          -> _queueIndex - 1
+            _repeatMode.value == 2   -> q.size - 1
+            else                     -> return
         }
         _queueIndex = prevIdx
-        playTrack(q[prevIdx])
+        playTrack(q[prevIdx], q)
     }
 
     fun toggleShuffle() {
@@ -204,11 +224,13 @@ class MusicViewModel @Inject constructor(
         _repeatMode.value = (_repeatMode.value + 1) % 3
     }
 
-    fun toggleFavorite(trackId: String) {
-        val current = _favorites.value.toMutableSet()
-        if (trackId in current) current.remove(trackId) else current.add(trackId)
+    fun toggleFavorite(track: Track) {
+        val current = _favorites.value.toMutableMap()
+        if (track.id in current) current.remove(track.id) else current[track.id] = track
         _favorites.value = current
     }
+
+    fun isFavorite(trackId: String): Boolean = trackId in _favorites.value
 
     private fun addToRecent(track: Track) {
         val list = _recentTracks.value.toMutableList()
@@ -224,7 +246,7 @@ class MusicViewModel @Inject constructor(
                     .setTitle(track.title)
                     .setDescription("Downloading…")
                     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "${track.title}.mp3")
+                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "${track.title}.m4a")
                     .setAllowedOverMetered(true)
                     .setAllowedOverRoaming(true)
                 (context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager).enqueue(req)
@@ -232,22 +254,22 @@ class MusicViewModel @Inject constructor(
         }
     }
 
+    fun clearError() { _errorMessage.value = null }
+
     private suspend fun updateTrackColor(url: String?) {
         if (url == null) return
         try {
-            val req = ImageRequest.Builder(context).data(url).allowHardware(false).build()
+            val req    = ImageRequest.Builder(context).data(url).allowHardware(false).build()
             val result = context.imageLoader.execute(req)
             if (result is SuccessResult) {
                 val bmp = (result.drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap
                 bmp?.let {
                     Palette.from(it).generate { p ->
-                        p?.dominantSwatch?.rgb?.let { c -> _trackColor.value = Color(c) }
+                        p?.vibrantSwatch?.rgb?.let { c -> _trackColor.value = Color(c) }
+                            ?: p?.dominantSwatch?.rgb?.let { c -> _trackColor.value = Color(c) }
                     }
                 }
             }
         } catch (_: Exception) {}
     }
-
-    private fun IntRange.minus(exclude: Int): List<Int> =
-        filter { it != exclude }
 }
