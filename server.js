@@ -1,4 +1,6 @@
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -49,14 +51,40 @@ const html = `<!DOCTYPE html>
     .tagline {
       font-size: 1.1rem;
       color: #aaa;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
       line-height: 1.6;
+    }
+    .download-section {
+      margin-bottom: 2.5rem;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: #fff;
+      font-weight: 700;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(233, 30, 99, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(233, 30, 99, 0.6);
+    }
+    .apk-info {
+      margin-top: 0.75rem;
+      font-size: 0.82rem;
+      color: #555;
     }
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 1.2rem;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
     }
     .feature-card {
       background: #1a1a1a;
@@ -78,7 +106,7 @@ const html = `<!DOCTYPE html>
     }
     .feature-desc { font-size: 0.8rem; color: #888; line-height: 1.4; }
     .tech-section { margin-bottom: 2rem; }
-    .tech-section h2 { font-size: 1rem; color: #666; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase; }
+    .tech-section h2 { font-size: 0.85rem; color: #555; margin-bottom: 1rem; letter-spacing: 2px; text-transform: uppercase; }
     .tags {
       display: flex;
       flex-wrap: wrap;
@@ -97,31 +125,42 @@ const html = `<!DOCTYPE html>
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: linear-gradient(135deg, #3ddc84, #00bfa5);
-      color: #000;
-      font-weight: 700;
-      padding: 0.75rem 2rem;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #aaa;
+      padding: 0.5rem 1.2rem;
       border-radius: 50px;
-      font-size: 0.95rem;
-      margin-top: 1rem;
+      font-size: 0.82rem;
+      margin-top: 1.5rem;
     }
-    .api-info {
-      margin-top: 2rem;
-      padding: 1rem 1.5rem;
+    .install-note {
+      margin-top: 1rem;
+      padding: 0.85rem 1.2rem;
       background: #111;
       border-radius: 12px;
       border: 1px solid #222;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: #555;
+      line-height: 1.5;
     }
-    .api-info span { color: #e91e63; }
+    .install-note strong { color: #e91e63; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="logo">🎵</div>
     <h1>ANNIE MUSIC</h1>
-    <p class="tagline">A modern Android music streaming app built with Kotlin &amp; Jetpack Compose.<br>Discover, search, and stream music across trending categories.</p>
+    <p class="tagline">A modern Android music streaming app.<br>Search, discover, and stream music across trending categories.</p>
+
+    <div class="download-section">
+      <a href="/download/annie-music.apk" class="download-btn">
+        <span>⬇</span> Download APK
+      </a>
+      <div class="apk-info">Debug build &nbsp;·&nbsp; Android 7.0+ (SDK 24+) &nbsp;·&nbsp; ~22 MB</div>
+      <div class="install-note">
+        <strong>Installation:</strong> Enable "Install from unknown sources" in your Android settings before installing.
+      </div>
+    </div>
 
     <div class="features">
       <div class="feature-card">
@@ -132,22 +171,22 @@ const html = `<!DOCTYPE html>
       <div class="feature-card">
         <div class="feature-icon">🔥</div>
         <div class="feature-title">Trending</div>
-        <div class="feature-desc">Browse Hindi, Punjabi, Bollywood &amp; more</div>
+        <div class="feature-desc">Hindi, Punjabi, Bollywood &amp; more</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">▶️</div>
         <div class="feature-title">Playback</div>
-        <div class="feature-desc">Background audio with Media3 ExoPlayer</div>
+        <div class="feature-desc">Background audio with ExoPlayer</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🎨</div>
         <div class="feature-title">Dynamic UI</div>
-        <div class="feature-desc">Adaptive colors from album art via Palette</div>
+        <div class="feature-desc">Adaptive colors from album art</div>
       </div>
     </div>
 
     <div class="tech-section">
-      <h2>Tech Stack</h2>
+      <h2>Built With</h2>
       <div class="tags">
         <span class="tag">Kotlin</span>
         <span class="tag">Jetpack Compose</span>
@@ -156,29 +195,40 @@ const html = `<!DOCTYPE html>
         <span class="tag">Retrofit</span>
         <span class="tag">Media3 ExoPlayer</span>
         <span class="tag">Coil</span>
-        <span class="tag">Coroutines</span>
         <span class="tag">MVVM</span>
-        <span class="tag">Palette API</span>
       </div>
     </div>
 
     <div class="android-badge">
-      <span>🤖</span> Android App (Min SDK 24 · Target SDK 34)
-    </div>
-
-    <div class="api-info">
-      Powered by <span>annie.qzz.io</span> — music search, trending &amp; streaming API
+      🤖 Android · Min SDK 24 · Target SDK 34
     </div>
   </div>
 </body>
 </html>`;
 
 const server = http.createServer((req, res) => {
+  if (req.url === '/download/annie-music.apk') {
+    const apkPath = path.join(__dirname, 'public', 'annie-music.apk');
+    if (fs.existsSync(apkPath)) {
+      const stat = fs.statSync(apkPath);
+      res.writeHead(200, {
+        'Content-Type': 'application/vnd.android.package-archive',
+        'Content-Disposition': 'attachment; filename="annie-music.apk"',
+        'Content-Length': stat.size
+      });
+      fs.createReadStream(apkPath).pipe(res);
+    } else {
+      res.writeHead(404);
+      res.end('APK not found');
+    }
+    return;
+  }
+
   res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end(html);
 });
 
 const PORT = 5000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`ANNIE MUSIC info page running at http://0.0.0.0:${PORT}`);
+  console.log(`ANNIE MUSIC running at http://0.0.0.0:${PORT}`);
 });

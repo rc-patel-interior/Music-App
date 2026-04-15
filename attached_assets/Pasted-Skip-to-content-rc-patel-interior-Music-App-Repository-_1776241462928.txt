@@ -1,0 +1,114 @@
+Skip to content
+rc-patel-interior
+Music-App
+Repository navigation
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security and quality
+Insights
+Settings
+Android CI
+Android CI #1
+All jobs
+Run details
+build
+failed now in 2m 43s
+Search logs
+2s
+1s
+1s
+0s
+2m 36s
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:mergeDebugJniLibFolders
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeExtDexDebug
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:mergeLibDexDebug
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:processDebugResources
+> Task :app:kaptGenerateStubsDebugKotlin
+> Task :app:kaptDebugKotlin
+e: file:///home/runner/work/Music-App/Music-App/app/src/main/java/com/annie/music/ui/MainScreen.kt:118:59 Unresolved reference: Pause
+e: file:///home/runner/work/Music-App/Music-App/app/src/main/java/com/annie/music/ui/screens/player/FullPlayerScreen.kt:50:44 Unresolved reference: Download
+e: file:///home/runner/work/Music-App/Music-App/app/src/main/java/com/annie/music/ui/screens/player/FullPlayerScreen.kt:96:44 Unresolved reference: SkipPrevious
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/Music-App/Music-App/app/src/main/java/com/annie/music/ui/screens/player/FullPlayerScreen.kt:106:58 Unresolved reference: Pause
+e: file:///home/runner/work/Music-App/Music-App/app/src/main/java/com/annie/music/ui/screens/player/FullPlayerScreen.kt:113:44 Unresolved reference: SkipNext
+27 actionable tasks: 27 executed
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+BUILD FAILED in 2m 34s
+Error: Process completed with exit code 1.
+##[debug]Finishing: Build debug APK
+0s
+##[debug]Evaluating condition for step: 'Upload debug APK'
+##[debug]Evaluating: success()
+##[debug]Evaluating success:
+##[debug]=> false
+##[debug]Result: false
+0s
+##[debug]Evaluating condition for step: 'Post Set up JDK 17'
+##[debug]Evaluating: always()
+##[debug]Evaluating always:
+##[debug]=> true
+##[debug]Result: true
+##[debug]Starting: Post Set up JDK 17
+##[debug]Loading inputs
+##[debug]Evaluating: job.status
+##[debug]Evaluating Index:
+##[debug]..Evaluating job:
+##[debug]..=> Object
+##[debug]..Evaluating String:
+##[debug]..=> 'status'
+##[debug]=> 'failure'
+##[debug]Result: 'failure'
+##[debug]Evaluating: (((github.server_url == 'https://github.com') && github.token) || '')
+##[debug]Evaluating Or:
+##[debug]..Evaluating And:
+##[debug]....Evaluating Equal:
+##[debug]......Evaluating Index:
+##[debug]........Evaluating github:
+##[debug]........=> Object
+##[debug]........Evaluating String:
+##[debug]........=> 'server_url'
+##[debug]......=> 'https://github.com'
+##[debug]......Evaluating String:
+##[debug]......=> 'https://github.com'
+##[debug]....=> true
+##[debug]....Evaluating Index:
+##[debug]......Evaluating github:
+##[debug]......=> Object
+##[debug]......Evaluating String:
+##[debug]......=> 'token'
+##[debug]....=> '***'
+##[debug]..=> '***'
+##[debug]=> '***'
+##[debug]Expanded: ((('https://github.com' == 'https://github.com') && '***') || '')
+##[debug]Result: '***'
+##[debug]Loading env
+Post job cleanup.
+##[debug]Node Action run completed with exit code 0
+##[debug]Finishing: Post Set up JDK 17
+1s
+0s
